@@ -5,6 +5,7 @@ import fitz  # PyMuPDF for PDF text extraction
 import re
 import os
 
+# --- Page Title ---
 st.title("🎯 InterviewCoach Pro")
 st.markdown("Your AI Mock Interviewer for High-Performance Roles")
 
@@ -89,7 +90,7 @@ elif st.session_state.step == 2:
     if all_answered and st.button("➡️ Proceed to Step 3"):
         st.session_state.step = 3
 
-# --- Step 3: Get Feedback (IMPROVED UI/UX) ---
+# --- Step 3: Get Feedback (Fully Refined UI/UX) ---
 elif st.session_state.step == 3:
     st.header("🧠 Step 3: Receive STAR Feedback & Rewrite Suggestions")
     final_score_total = 0
@@ -100,24 +101,11 @@ elif st.session_state.step == 3:
         answer = st.session_state.get(f"answer_{i}", "")
 
         feedback_prompt = f'''
-You are a high-stakes mock interview coach for elite consulting, marketing, sales, and product roles. Evaluate critically using the STAR method with McKinsey-level scrutiny. Be rigorous.
+You are a mock interview coach. Evaluate this behavioral interview answer using the STAR framework. Structure your reply in three clearly labeled sections:
 
-## Step 1: STAR Breakdown
-Break the answer into Situation, Task, Action, Result. 
-- Identify weak verbs, filler content, and gaps in logic.
-- Penalize generic or unverifiable claims.
-- Praise tangible impact and confident storytelling.
-
-## Step 2: Final Score (out of 10)
-- 9–10: Elite answer; confident, structured, quantifiable.
-- 7–8: Solid but could use clearer impact or tighter phrasing.
-- 5–6: Adequate structure, but weak delivery or result.
-- <5: Confusing or structurally broken.
-
-End like: Score: 7.5/10 – Strong action but impact unclear.
-
-## Step 3: Resume-Based Enhancement
-Cross-reference with CV. Suggest better framing or context from resume items.
+1. **STAR Feedback** — break into bold-labeled **Situation**, **Task**, **Action**, **Result**, and follow with bullet points if needed.
+2. **Final Score (out of 10)** — start with "Score: X/10".
+3. **Resume-Based Enhancement** — suggest how the resume supports or can enhance the answer.
 
 Question: {q}  
 Answer: {answer}  
@@ -125,16 +113,16 @@ Resume: {st.session_state['cv']}
 '''
 
         rewrite_prompt = f"""
-Rewrite this answer in better STAR format:
-- Sharpen the task
-- Add results
-- Make it business-relevant and crisp
+Rewrite the following answer as a single, fluent STAR-format story.
+- DO NOT label Situation, Task, Action, or Result.
+- Write it like a confident consultant answering in one paragraph.
+
 Question: {q}
-Original Answer: {answer}
+Answer: {answer}
 """
 
         try:
-            with st.spinner(f"Generating feedback for Q{i+1}..."):
+            with st.spinner(f"Analyzing Q{i+1}..."):
                 feedback_response = openai.chat.completions.create(
                     model="gpt-4",
                     messages=[{"role": "user", "content": feedback_prompt}]
@@ -154,16 +142,23 @@ Original Answer: {answer}
                 with st.expander("🧾 Original Answer"):
                     st.text_area("Your Answer", value=answer, height=150, key=f"orig_answer_{i}", disabled=True)
 
+                # Extract STAR, Score, Enhancement using regex (for layout separation)
+                star_match = re.search(r"\*\*STAR Feedback\*\*(.*?)(?:\*\*Final Score|$)", feedback, re.DOTALL)
+                score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback)
+                enh_match = re.search(r"\*\*Resume-Based Enhancement\*\*(.*)", feedback, re.DOTALL)
+
+                star_text = star_match.group(1).strip() if star_match else "STAR structure not detected."
+                enh_text = enh_match.group(1).strip() if enh_match else "No enhancement advice provided."
+
                 cols = st.columns(2)
                 with cols[0]:
                     st.markdown("🔍 **STAR Feedback**")
-                    st.text_area("Feedback", value=feedback, key=f"feedback_{i}_readonly", disabled=True, height=300)
+                    st.text_area("Feedback", value=star_text, key=f"feedback_{i}", disabled=True, height=300)
 
                 with cols[1]:
                     st.markdown("🔁 **Suggested Rewrite**")
-                    st.text_area("Rewrite", value=rewrite, key=f"rewrite_{i}_readonly", disabled=True, height=300)
+                    st.text_area("Rewrite", value=rewrite, key=f"rewrite_{i}", disabled=True, height=300)
 
-                score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback, re.IGNORECASE)
                 if score_match:
                     score_val = float(score_match.group(1))
                     final_score_total += score_val
@@ -171,36 +166,37 @@ Original Answer: {answer}
                     score_color = "🟢" if score_val >= 8 else "🟡" if score_val >= 6 else "🔴"
                     st.markdown(f"**{score_color} Score:** {score_val}/10")
                 else:
-                    st.warning("⚠️ Score not found in feedback.")
+                    st.warning("⚠️ Score not found.")
 
-                feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nSUGGESTED REWRITE:\n{rewrite}\n")
+                with st.expander("📈 Resume-Based Enhancement"):
+                    st.markdown(enh_text)
+
+                feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nREWRITE:\n{rewrite}")
                 st.markdown("---")
 
         except Exception as e:
-            st.error(f"Error in generating feedback or rewrite: {e}")
+            st.error(f"Error generating feedback: {e}")
 
-    # Final summary and fit evaluation
+    # --- Step 4: Final Score & Fit Report ---
     if feedback_export:
         st.subheader("📊 Step 4: Summary Report & Final Recommendation")
         if valid_scores:
             avg_score = final_score_total / valid_scores
             st.success(f"✅ Average STAR Answer Score: {avg_score:.1f}/10")
         else:
-            st.warning("⚠️ Average Score: Not available")
+            avg_score = 0
+            st.warning("⚠️ No valid scores available.")
 
         fit_prompt = f"""
-You are a senior hiring manager trained in candidate evaluation. Using the Job Description, Resume, and the candidate's STAR-format interview responses, assess how well this candidate fits the role.
+You are a senior hiring manager trained in candidate evaluation. Assess this candidate based on:
 
-Rate on these 5 dimensions (1–10 each):
-- Technical Tools: List specific tools used (SQL, Tableau, etc.), assess alignment with JD.
-- Domain Experience: Match real work done with what the role demands.
-- Problem Solving: Reference concrete examples and business impact from answers.
-- Communication: Judge structure, clarity, and precision in written answers.
-- Leadership/Initiative: Use resume and answers to assess proactive behavior.
+- Technical Tools
+- Domain Experience
+- Problem Solving
+- Communication
+- Leadership
 
-For each dimension, first give the score (e.g., "Technical Tools: 8") on a line, then a line break, then explain why.
-
-Conclude with a total out of 50, percentage out of 100, and a final one-line hiring recommendation.
+Provide each as 'Dimension: Score' and an explanation. Conclude with score out of 50 and a one-line hiring recommendation.
 
 Job Description:
 {st.session_state['jd']}
@@ -213,13 +209,13 @@ Interview Answers:
 """
 
         try:
-            with st.spinner("Evaluating candidate fit score..."):
+            with st.spinner("Evaluating fit..."):
                 fit_response = openai.chat.completions.create(
                     model="gpt-4",
                     messages=[{"role": "user", "content": fit_prompt}]
                 )
                 fit_result = fit_response.choices[0].message.content.strip()
-                st.info(f"📌 Fit Score Summary (fit between JD and CV):\n\n{fit_result}")
+                st.info(f"📌 Fit Evaluation:\n\n{fit_result}")
 
                 recommendation = (
                     "✅ Recommendation: Proceed to interview"
@@ -232,23 +228,22 @@ Interview Answers:
                 st.markdown(recommendation)
 
         except Exception as e:
-            st.error(f"Error generating fit score: {e}")
+            st.error(f"Error evaluating fit: {e}")
 
-        # Export Word document
+        # --- Export Feedback as Word Doc ---
         from docx import Document
         from io import BytesIO
 
-        report_doc = Document()
-        report_doc.add_heading("InterviewCoach Pro - Feedback Report", level=1)
-        for i, item in enumerate(feedback_export):
-            report_doc.add_page_break()
-            report_doc.add_heading(f"Question {i+1}", level=2)
-            sections = item.split("\n\n")
-            for section in sections:
-                report_doc.add_paragraph(section.strip())
+        doc = Document()
+        doc.add_heading("InterviewCoach Pro - Feedback Report", level=1)
+        for i, content in enumerate(feedback_export):
+            doc.add_page_break()
+            doc.add_heading(f"Question {i+1}", level=2)
+            for block in content.split("\n\n"):
+                doc.add_paragraph(block.strip())
 
         word_file = BytesIO()
-        report_doc.save(word_file)
+        doc.save(word_file)
         word_file.seek(0)
 
         st.download_button(
