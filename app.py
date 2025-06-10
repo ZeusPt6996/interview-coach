@@ -91,7 +91,7 @@ elif st.session_state.step == 2:
         st.session_state.step = 3
 
 # --- Step 3: Get Feedback ---
-
+# --- Step 3: Get Feedback ---
 elif st.session_state.step == 3:
     st.header("🧠 Step 3: Receive STAR Feedback & Rewrite Suggestions")
     final_score_total = 0
@@ -149,29 +149,48 @@ Resume: {st.session_state['cv']}
                 )
                 rewrite = rewrite_response.choices[0].message.content.strip()
 
+            # --- Extract feedback sections ---
+            feedback_parts = re.split(r"(Score:\s*\d+(\.\d+)?\s*/\s*10)", feedback, flags=re.IGNORECASE)
+            star_feedback = feedback_parts[0].strip()
+            score_line = feedback_parts[1].strip() if len(feedback_parts) > 1 else ""
+            resume_enhancement = feedback_parts[2].strip() if len(feedback_parts) > 2 else ""
+
+            # --- Structured Display ---
             st.subheader(f"📝 Feedback for Q{i+1}")
-            st.markdown(f"> **Question:** {q}")
+            st.markdown(f"### ❓ **Question:**\n{q}")
 
-            # ✅ Replacing st.code with wrapped markdown for better readability
-            st.markdown("**Original Answer:**")
-            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap'>{answer}</div>", unsafe_allow_html=True)
+            st.markdown("### 🗒️ **Original Answer:**")
+            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{answer}</div>", unsafe_allow_html=True)
 
-            st.markdown("**Feedback:**")
-            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap'>{feedback}</div>", unsafe_allow_html=True)
+            st.markdown("### 🧠 **STAR Feedback:**")
+            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{star_feedback}</div>", unsafe_allow_html=True)
 
+            if score_line:
+                st.markdown("### 📊 **Final Score:**")
+                st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px; color:#1a73e8;'>{score_line}</div>", unsafe_allow_html=True)
+
+            if resume_enhancement:
+                st.markdown("### 🧾 **Resume-Based Enhancement:**")
+                st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{resume_enhancement}</div>", unsafe_allow_html=True)
+
+            st.markdown("### 🔁 **Suggested Rewrite:**")
+            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{rewrite}</div>", unsafe_allow_html=True)
             st.markdown("---")
-            st.markdown("🔁 **Suggested Rewrite:**")
-            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap'>{rewrite}</div>", unsafe_allow_html=True)
-            st.markdown("---")
 
-            feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nSUGGESTED REWRITE:\n{rewrite}\n")
+            # --- Export for docx report ---
+            feedback_export.append(
+                f"Q{i+1}: {q}\n\nORIGINAL ANSWER:\n{answer}\n\nFEEDBACK:\n{star_feedback}\n\n{score_line}\n\nRESUME ENHANCEMENT:\n{resume_enhancement}\n\nSUGGESTED REWRITE:\n{rewrite}\n"
+            )
 
+            # --- Score Aggregation ---
             score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback, re.IGNORECASE)
             if score_match:
                 final_score_total += float(score_match.group(1))
                 valid_scores += 1
+
         except Exception as e:
             st.error(f"Error in generating feedback or rewrite: {e}")
+
 
          
     if feedback_export:
