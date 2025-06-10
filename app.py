@@ -3,14 +3,13 @@ st.set_page_config(page_title="InterviewCoach Pro", layout="wide")
 import openai
 import fitz  # PyMuPDF for PDF text extraction
 import re
+import os
 
 st.title("🎯 InterviewCoach Pro")
 st.markdown("Your AI Mock Interviewer for High-Performance Roles")
 
 # --- API KEY SETUP ---
-import os
 openai.api_key = st.secrets["openai_api_key"]
-
 
 if "step" not in st.session_state:
     st.session_state.step = 1
@@ -90,8 +89,7 @@ elif st.session_state.step == 2:
     if all_answered and st.button("➡️ Proceed to Step 3"):
         st.session_state.step = 3
 
-# --- Step 3: Get Feedback ---
-# --- Step 3: Get Feedback ---
+# --- Step 3: Get Feedback (UPDATED) ---
 elif st.session_state.step == 3:
     st.header("🧠 Step 3: Receive STAR Feedback & Rewrite Suggestions")
     final_score_total = 0
@@ -127,13 +125,13 @@ Resume: {st.session_state['cv']}
 '''
 
         rewrite_prompt = f"""
-        Rewrite this answer in better STAR format:
-        - Sharpen the task
-        - Add results
-        - Make it business-relevant and crisp
-        Question: {q}
-        Original Answer: {answer}
-        """
+Rewrite this answer in better STAR format:
+- Sharpen the task
+- Add results
+- Make it business-relevant and crisp
+Question: {q}
+Original Answer: {answer}
+"""
 
         try:
             with st.spinner(f"Generating feedback for Q{i+1}..."):
@@ -149,40 +147,24 @@ Resume: {st.session_state['cv']}
                 )
                 rewrite = rewrite_response.choices[0].message.content.strip()
 
-            # --- Extract feedback sections ---
-            feedback_parts = re.split(r"(Score:\s*\d+(\.\d+)?\s*/\s*10)", feedback, flags=re.IGNORECASE)
-            star_feedback = feedback_parts[0].strip()
-            score_line = feedback_parts[1].strip() if len(feedback_parts) > 1 else ""
-            resume_enhancement = feedback_parts[2].strip() if len(feedback_parts) > 2 else ""
-
-            # --- Structured Display ---
             st.subheader(f"📝 Feedback for Q{i+1}")
-            st.markdown(f"### ❓ **Question:**\n{q}")
+            st.markdown(f"**📌 Question:** {q}")
 
-            st.markdown("### 🗒️ **Original Answer:**")
-            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{answer}</div>", unsafe_allow_html=True)
+            with st.expander("🧾 Original Answer"):
+                st.text_area("Your Answer", value=answer, height=150, key=f"ans_{i}_readonly", disabled=True)
 
-            st.markdown("### 🧠 **STAR Feedback:**")
-            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{star_feedback}</div>", unsafe_allow_html=True)
+            cols = st.columns(2)
+            with cols[0]:
+                st.markdown("🔍 **STAR Feedback**")
+                st.text_area("Feedback", value=feedback, height=300, key=f"feedback_{i}_readonly", disabled=True)
 
-            if score_line:
-                st.markdown("### 📊 **Final Score:**")
-                st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px; color:#1a73e8;'>{score_line}</div>", unsafe_allow_html=True)
+            with cols[1]:
+                st.markdown("🔁 **Suggested Rewrite**")
+                st.text_area("Rewrite", value=rewrite, height=300, key=f"rewrite_{i}_readonly", disabled=True)
 
-            if resume_enhancement:
-                st.markdown("### 🧾 **Resume-Based Enhancement:**")
-                st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{resume_enhancement}</div>", unsafe_allow_html=True)
-
-            st.markdown("### 🔁 **Suggested Rewrite:**")
-            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap; font-size:15px;'>{rewrite}</div>", unsafe_allow_html=True)
             st.markdown("---")
+            feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nSUGGESTED REWRITE:\n{rewrite}\n")
 
-            # --- Export for docx report ---
-            feedback_export.append(
-                f"Q{i+1}: {q}\n\nORIGINAL ANSWER:\n{answer}\n\nFEEDBACK:\n{star_feedback}\n\n{score_line}\n\nRESUME ENHANCEMENT:\n{resume_enhancement}\n\nSUGGESTED REWRITE:\n{rewrite}\n"
-            )
-
-            # --- Score Aggregation ---
             score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback, re.IGNORECASE)
             if score_match:
                 final_score_total += float(score_match.group(1))
@@ -191,8 +173,6 @@ Resume: {st.session_state['cv']}
         except Exception as e:
             st.error(f"Error in generating feedback or rewrite: {e}")
 
-
-         
     if feedback_export:
         st.subheader("📊 Step 4: Summary Report & Final Recommendation")
         if valid_scores:
@@ -235,8 +215,16 @@ Interview Answers:
                 fit_result = fit_response.choices[0].message.content.strip()
                 st.info(f"📌 Fit Score Summary (fit between JD and CV):\n\n{fit_result}")
 
-                recommendation = "✅ Recommendation: Proceed to interview" if avg_score >= 8 else ("🚫 Recommendation: Not ready for interview" if avg_score < 7 else "🚫 Recommendation: Practice more before the interview but you are close")
+                recommendation = (
+                    "✅ Recommendation: Proceed to interview"
+                    if avg_score >= 8 else (
+                        "🚫 Recommendation: Not ready for interview"
+                        if avg_score < 7 else
+                        "⚠️ Recommendation: Practice more before the interview but you're close"
+                    )
+                )
                 st.markdown(recommendation)
+
         except Exception as e:
             st.error(f"Error generating fit score: {e}")
 
