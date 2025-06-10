@@ -91,6 +91,7 @@ elif st.session_state.step == 2:
         st.session_state.step = 3
 
 # --- Step 3: Get Feedback ---
+
 elif st.session_state.step == 3:
     st.header("🧠 Step 3: Receive STAR Feedback & Rewrite Suggestions")
     final_score_total = 0
@@ -150,14 +151,19 @@ Resume: {st.session_state['cv']}
 
             st.subheader(f"📝 Feedback for Q{i+1}")
             st.markdown(f"> **Question:** {q}")
+
+            # ✅ Replacing st.code with wrapped markdown for better readability
             st.markdown("**Original Answer:**")
-            st.code(answer, language="markdown")
+            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap'>{answer}</div>", unsafe_allow_html=True)
+
             st.markdown("**Feedback:**")
-            st.code(feedback, language="markdown")
+            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap'>{feedback}</div>", unsafe_allow_html=True)
+
             st.markdown("---")
             st.markdown("🔁 **Suggested Rewrite:**")
-            st.markdown(rewrite)
+            st.markdown(f"<div style='font-family:Arial, sans-serif; white-space:pre-wrap'>{rewrite}</div>", unsafe_allow_html=True)
             st.markdown("---")
+
             feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nSUGGESTED REWRITE:\n{rewrite}\n")
 
             score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback, re.IGNORECASE)
@@ -167,6 +173,7 @@ Resume: {st.session_state['cv']}
         except Exception as e:
             st.error(f"Error in generating feedback or rewrite: {e}")
 
+         
     if feedback_export:
         st.subheader("📊 Step 4: Summary Report & Final Recommendation")
         if valid_scores:
