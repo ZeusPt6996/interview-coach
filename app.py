@@ -89,7 +89,7 @@ elif st.session_state.step == 2:
     if all_answered and st.button("➡️ Proceed to Step 3"):
         st.session_state.step = 3
 
-# --- Step 3: Get Feedback (UPDATED) ---
+# --- Step 3: Get Feedback (IMPROVED UI/UX) ---
 elif st.session_state.step == 3:
     st.header("🧠 Step 3: Receive STAR Feedback & Rewrite Suggestions")
     final_score_total = 0
@@ -147,39 +147,45 @@ Original Answer: {answer}
                 )
                 rewrite = rewrite_response.choices[0].message.content.strip()
 
-            st.subheader(f"📝 Feedback for Q{i+1}")
-            st.markdown(f"**📌 Question:** {q}")
+            with st.container():
+                st.markdown(f"### 📌 Feedback for Q{i+1}")
+                st.markdown(f"**🔹 Question:** {q}")
 
-            with st.expander("🧾 Original Answer"):
-                st.text_area("Your Answer", value=answer, height=150, key=f"ans_{i}_readonly", disabled=True)
+                with st.expander("🧾 Original Answer"):
+                    st.text_area("Your Answer", value=answer, height=150, key=f"orig_answer_{i}", disabled=True)
 
-            cols = st.columns(2)
-            with cols[0]:
-                st.markdown("🔍 **STAR Feedback**")
-                st.text_area("Feedback", value=feedback, height=300, key=f"feedback_{i}_readonly", disabled=True)
+                cols = st.columns(2)
+                with cols[0]:
+                    st.markdown("🔍 **STAR Feedback**")
+                    st.text_area("Feedback", value=feedback, key=f"feedback_{i}_readonly", disabled=True, height=300)
 
-            with cols[1]:
-                st.markdown("🔁 **Suggested Rewrite**")
-                st.text_area("Rewrite", value=rewrite, height=300, key=f"rewrite_{i}_readonly", disabled=True)
+                with cols[1]:
+                    st.markdown("🔁 **Suggested Rewrite**")
+                    st.text_area("Rewrite", value=rewrite, key=f"rewrite_{i}_readonly", disabled=True, height=300)
 
-            st.markdown("---")
-            feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nSUGGESTED REWRITE:\n{rewrite}\n")
+                score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback, re.IGNORECASE)
+                if score_match:
+                    score_val = float(score_match.group(1))
+                    final_score_total += score_val
+                    valid_scores += 1
+                    score_color = "🟢" if score_val >= 8 else "🟡" if score_val >= 6 else "🔴"
+                    st.markdown(f"**{score_color} Score:** {score_val}/10")
+                else:
+                    st.warning("⚠️ Score not found in feedback.")
 
-            score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback, re.IGNORECASE)
-            if score_match:
-                final_score_total += float(score_match.group(1))
-                valid_scores += 1
+                feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nSUGGESTED REWRITE:\n{rewrite}\n")
+                st.markdown("---")
 
         except Exception as e:
             st.error(f"Error in generating feedback or rewrite: {e}")
 
+    # Final summary and fit evaluation
     if feedback_export:
         st.subheader("📊 Step 4: Summary Report & Final Recommendation")
         if valid_scores:
             avg_score = final_score_total / valid_scores
             st.success(f"✅ Average STAR Answer Score: {avg_score:.1f}/10")
         else:
-            avg_score = 0
             st.warning("⚠️ Average Score: Not available")
 
         fit_prompt = f"""
@@ -228,6 +234,7 @@ Interview Answers:
         except Exception as e:
             st.error(f"Error generating fit score: {e}")
 
+        # Export Word document
         from docx import Document
         from io import BytesIO
 
