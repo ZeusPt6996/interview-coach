@@ -209,7 +209,7 @@ Interview Answers:
                 fit_result = fit_response.choices[0].message.content.strip()
                 st.info(f"📌 Fit Score Summary (fit between JD and CV):\n\n{fit_result}")
 
-                recommendation = "✅ Recommendation: Proceed to interview" if avg_score >= 8 else ("🚫 Recommendation: Not ready for interview" if avg_score < 6 else "🚫 Recommendation: Practice more before the interview but you are close")
+                recommendation = "✅ Recommendation: Proceed to interview" if avg_score >= 8 else ("🚫 Recommendation: Not ready for interview" if avg_score < 7 else "🚫 Recommendation: Practice more before the interview but you are close")
                 st.markdown(recommendation)
         except Exception as e:
             st.error(f"Error generating fit score: {e}")
