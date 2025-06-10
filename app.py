@@ -11,7 +11,6 @@ st.markdown("Your AI Mock Interviewer for High-Performance Roles")
 import os
 openai.api_key = st.secrets["openai_api_key"]
 
-
 if "step" not in st.session_state:
     st.session_state.step = 1
 
