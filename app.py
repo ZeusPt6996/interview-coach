@@ -16,7 +16,7 @@ if "step" not in st.session_state:
 
 # --- Step 1: Upload & Setup ---
 if st.session_state.step == 1:
-    st.header("Step 1: Upload Job Description & Resume")
+    st.header("Step 1: Upload Job Description & Resumee")
     jd_input = st.text_area("📌 Paste the Job Description:")
     cv_file = st.file_uploader("📄 Upload your resume (PDF only):", type=["pdf"])
     jd_q_count = st.number_input("🎯 How many questions from the Job Description?", min_value=0, max_value=10, value=2)
