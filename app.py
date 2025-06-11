@@ -107,7 +107,7 @@ You are a high-stakes mock interview coach for elite consulting, marketing, sale
 
 1. STAR Breakdown
 Break the answer into Situation, Task, Action, Result. 
-- Identify weak verbs, filler content, and gaps in logic.
+- Identify weak verbs, filler content, and gaps in logic. Do not create separate labels.
 - Penalize generic or unverifiable claims.
 - Praise tangible impact and confident storytelling.
 
@@ -128,7 +128,7 @@ Resume: {st.session_state['cv']}
 '''
 
         rewrite_prompt = f"""
-Rewrite this answer in a business-focused tone. Do not include Situation, Task, Action, or Result labels. Ensure it's concise, engaging, and structured logically.
+Rewrite this answer in a business-focused tone. Do not include Situation, Task, Action, or Result labels but follow the format. Ensure it's concise, engaging, and structured logically.
 
 Question: {q}
 Original Answer: {answer}
