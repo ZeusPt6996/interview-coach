@@ -128,10 +128,7 @@ Resume: {st.session_state['cv']}
 '''
 
         rewrite_prompt = f"""
-Rewrite this answer in better STAR format:
-- Sharpen the task
-- Add results
-- Make it business-relevant and crisp
+Rewrite this as a business-focused, result-oriented response. Do not label STAR sections. Just follow the STAR logic naturally and use a professional tone.
 
 Question: {q}
 Original Answer: {answer}
@@ -143,7 +140,8 @@ Original Answer: {answer}
                     model="gpt-4",
                     messages=[{"role": "user", "content": feedback_prompt}]
                 )
-                feedback = feedback_response.choices[0].message.content.strip() if len(answer.strip()) >= 5 else "⚠️ No valid answer provided. Please write a more complete response."
+                feedback_raw = feedback_response.choices[0].message.content.strip() if len(answer.strip()) >= 5 else "⚠️ No valid answer provided. Please write a more complete response."
+feedback = feedback_raw.replace("##", "").replace("###", "").replace("**", "")"⚠️ No valid answer provided. Please write a more complete response."
 
                 rewrite_response = openai.chat.completions.create(
                     model="gpt-4",
