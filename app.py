@@ -105,13 +105,13 @@ elif st.session_state.step == 3:
         feedback_prompt = f'''
 You are a high-stakes mock interview coach for elite consulting, marketing, sales, and product roles. Evaluate critically using the STAR method with McKinsey-level scrutiny. Be rigorous.
 
-Step 1: STAR Breakdown
+1. STAR Breakdown
 Break the answer into Situation, Task, Action, Result. 
 - Identify weak verbs, filler content, and gaps in logic.
 - Penalize generic or unverifiable claims.
 - Praise tangible impact and confident storytelling.
 
-Step 2: Final Score (out of 10)
+2. Final Score (out of 10)
 - 9–10: Elite answer; confident, structured, quantifiable.
 - 7–8: Solid but could use clearer impact or tighter phrasing.
 - 5–6: Adequate structure, but weak delivery or result.
@@ -119,7 +119,7 @@ Step 2: Final Score (out of 10)
 
 End like: Score: 7.5/10 – Strong action but impact unclear.
 
-Step 3: Resume-Based Enhancement
+3. Resume-Based Enhancement
 Cross-reference with CV. Suggest better framing or context from resume items.
 
 Question: {q}  
@@ -141,10 +141,7 @@ Original Answer: {answer}
                     messages=[{"role": "user", "content": feedback_prompt}]
                 )
                 feedback_raw = feedback_response.choices[0].message.content.strip() if len(answer.strip()) >= 5 else "⚠️ No valid answer provided. Please write a more complete response."
-feedback = feedback_raw.replace("##", "").replace("###", "").replace("**", "").replace("
-", "
-
-")"⚠️ No valid answer provided. Please write a more complete response."
+                feedback = feedback_raw.replace("##", "").replace("###", "").replace("**", "").replace("\n", "\n\n")
 
                 rewrite_response = openai.chat.completions.create(
                     model="gpt-4",
@@ -161,26 +158,26 @@ feedback = feedback_raw.replace("##", "").replace("###", "").replace("**", "").r
                     st.markdown(wrapped_answer)
 
                 with st.container():
-    st.markdown("### 📌 Feedback")
-    star_section, score_section, resume_section = "", "", ""
-    if "Step 2:" in feedback and "Step 3:" in feedback:
-        star_section = feedback.split("Step 2:")[0].strip()
-        score_section = feedback.split("Step 2:")[1].split("Step 3:")[0].strip()
-        resume_section = feedback.split("Step 3:")[1].strip()
-    else:
-        star_section = feedback
+                    st.markdown("### 📌 Feedback")
+                    star_section, score_section, resume_section = "", "", ""
+                    if "2." in feedback and "3." in feedback:
+                        star_section = feedback.split("2.")[0].strip()
+                        score_section = feedback.split("2.")[1].split("3.")[0].strip()
+                        resume_section = feedback.split("3.")[1].strip()
+                    else:
+                        star_section = feedback
 
-    st.markdown("**1. STAR Breakdown**")
-    cleaned_star = re.sub(r"^.*?Situation:?", "", star_section, flags=re.IGNORECASE).strip()
-    st.markdown(cleaned_star)
-    if score_section:
-        st.markdown("**2. Final Score**")
-    cleaned_score = re.sub(r"^.*?Score:?", "", score_section, flags=re.IGNORECASE).strip()
-    st.markdown(cleaned_score)
-    if resume_section:
-        st.markdown("**3. Resume-Based Enhancement**")
-    cleaned_resume = re.sub(r"^.*?Resume-Based Enhancement:?", "", resume_section, flags=re.IGNORECASE).strip()
-    st.markdown(cleaned_resume)
+                    st.markdown("**1. STAR Breakdown**")
+                    cleaned_star = re.sub(r"^.*?Situation:?", "", star_section, flags=re.IGNORECASE).strip()
+                    st.markdown(cleaned_star)
+                    if score_section:
+                        st.markdown("**2. Final Score**")
+                    cleaned_score = re.sub(r"^.*?Score:?", "", score_section, flags=re.IGNORECASE).strip()
+                    st.markdown(cleaned_score)
+                    if resume_section:
+                        st.markdown("**3. Resume-Based Enhancement**")
+                    cleaned_resume = re.sub(r"^.*?Resume-Based Enhancement:?", "", resume_section, flags=re.IGNORECASE).strip()
+                    st.markdown(cleaned_resume)
 
                 with st.container():
                     st.markdown("### ✍️ Suggested Rewrite")
