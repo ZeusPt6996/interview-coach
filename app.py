@@ -154,8 +154,8 @@ Original Answer: {answer}
                 st.markdown(f"**🔹 Question:** {q}")
 
                 with st.container():
-    st.markdown("### 💬 Original Answer")
     import textwrap
+    st.markdown("### 💬 Original Answer")
     wrapped_answer = textwrap.fill(answer, width=100)
     st.markdown(wrapped_answer)
 
