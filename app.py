@@ -101,63 +101,40 @@ elif st.session_state.step == 3:
     for i, q in enumerate(st.session_state['questions']):
         answer = st.session_state.get(f"answer_{i}", "")
 
-        feedback_prompt = f"""
+        feedback_prompt = f'''
 You are a high-stakes mock interview coach for elite consulting, marketing, sales, and product roles. Evaluate critically using the STAR method with McKinsey-level scrutiny. Be rigorous.
 
----
+## Step 1: STAR Breakdown
+Break the answer into Situation, Task, Action, Result. 
+- Identify weak verbs, filler content, and gaps in logic.
+- Penalize generic or unverifiable claims.
+- Praise tangible impact and confident storytelling.
 
-### 📌 **1. STAR BREAKDOWN**  
-Break the answer into **Situation**, **Task**, **Action**, and **Result**.
+## Step 2: Final Score (out of 10)
+- 9–10: Elite answer; confident, structured, quantifiable.
+- 7–8: Solid but could use clearer impact or tighter phrasing.
+- 5–6: Adequate structure, but weak delivery or result.
+- <5: Confusing or structurally broken.
 
-- 🔍 Identify weak verbs, filler content, and logic gaps  
-- ⚠️ Penalize generic, vague, or unverifiable claims  
-- ✅ Praise tangible results, confident framing, and strong verbs
+End like: Score: 7.5/10 – Strong action but impact unclear.
 
----
+## Step 3: Resume-Based Enhancement
+Cross-reference with CV. Suggest better framing or context from resume items.
 
-### 🏁 **2. FINAL SCORE (OUT OF 10)**  
-Use this scale:
-
-- **9–10**: Elite – Confident, structured, and clearly impactful  
-- **7–8**: Solid – Good effort, but tighter phrasing or clearer impact needed  
-- **5–6**: Adequate – STAR is present but delivery or results are soft  
-- **<5**: Weak – Confusing, missing structure, or lacking results  
-
-💡 **End like**: `Score: 7.5/10 – Strong action but impact unclear.`
-
----
-
-### 🧬 **3. RESUME-BASED ENHANCEMENT**  
-Cross-reference with the candidate's resume. Suggest improvements to:
-
-- Provide stronger context  
-- Replace generic phrasing with specific resume achievements  
-- Better reflect the candidate's domain knowledge or role experience
-
----
-
-### ❓ **Question**  
-{q}
-
----
-
-### 🗣️ **Answer**  
-{answer}
-
----
-
-### 📄 **Resume**  
-{st.session_state['cv']}
-"""
+Question: {q}  
+Answer: {answer}  
+Resume: {st.session_state['cv']}
+'''
 
         rewrite_prompt = f"""
-        Rewrite this answer in better STAR format:
-        - Sharpen the task
-        - Add results
-        - Make it business-relevant and crisp
-        Question: {q}
-        Original Answer: {answer}
-        """
+Rewrite this answer in better STAR format:
+- Sharpen the task
+- Add results
+- Make it business-relevant and crisp
+
+Question: {q}
+Original Answer: {answer}
+"""
 
         try:
             with st.spinner(f"Generating feedback for Q{i+1}..."):
@@ -173,16 +150,21 @@ Cross-reference with the candidate's resume. Suggest improvements to:
                 )
                 rewrite = rewrite_response.choices[0].message.content.strip()
 
-            st.subheader(f"📝 Feedback for Q{i+1}")
-            st.markdown(f"> **Question:** {q}")
-            st.markdown("**Original Answer:**")
-            st.code(answer, language="markdown")
-            st.markdown("**Feedback:**")
-            st.code(feedback, language="markdown")
-            st.markdown("---")
-            st.markdown("🔁 **Suggested Rewrite:**")
-            st.markdown(rewrite)
-            st.markdown("---")
+            with st.expander(f"📝 Feedback for Q{i+1}"):
+                st.markdown(f"**🔹 Question:** {q}")
+
+                with st.container():
+                    st.markdown("### 💬 Original Answer")
+                    st.markdown(answer)
+
+                with st.container():
+                    st.markdown("### 📌 Feedback")
+                    st.markdown(feedback, unsafe_allow_html=True)
+
+                with st.container():
+                    st.markdown("### ✍️ Suggested Rewrite")
+                    st.text_area("Enhanced Answer", value=rewrite, height=200)
+
             feedback_export.append(f"Q{i+1}: {q}\n\nFEEDBACK:\n{feedback}\n\nSUGGESTED REWRITE:\n{rewrite}\n")
 
             score_match = re.search(r"Score:\s*(\d+(\.\d+)?)\s*/\s*10", feedback, re.IGNORECASE)
