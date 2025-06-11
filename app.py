@@ -16,7 +16,7 @@ if "step" not in st.session_state:
 
 # --- Step 1: Upload & Setup ---
 if st.session_state.step == 1:
-    st.header("🗕️ Step 1: Upload Job Description & Resume")
+    st.header("Step 1: Upload Job Description & Resume")
     jd_input = st.text_area("📌 Paste the Job Description:")
     cv_file = st.file_uploader("📄 Upload your resume (PDF only):", type=["pdf"])
     jd_q_count = st.number_input("🎯 How many questions from the Job Description?", min_value=0, max_value=10, value=2)
@@ -91,7 +91,7 @@ elif st.session_state.step == 2:
 
 # --- Step 3: Get Feedback ---
 elif st.session_state.step == 3:
-    st.header("🧠 Step 3: Receive STAR Feedback & Rewrite Suggestions")
+    st.header("🧠 Step 3: Feedback and Suggested Improvements")
     final_score_total = 0
     valid_scores = 0
     feedback_export = []
@@ -102,13 +102,14 @@ elif st.session_state.step == 3:
         feedback_prompt = f'''
 You are a high-stakes mock interview coach for elite consulting, marketing, sales, and product roles. Evaluate critically using the STAR method with McKinsey-level scrutiny. Be rigorous.
 
-## Step 1: STAR Breakdown
+1: STAR Breakdown
 Break the answer into Situation, Task, Action, Result. 
 - Identify weak verbs, filler content, and gaps in logic.
 - Penalize generic or unverifiable claims.
-- Praise tangible impact and confident storytelling.
+- Praise tangible impact (in terms of numbers/percentage or otherwise) and confident storytelling.
 
-## Step 2: Final Score (out of 10)
+
+2: Final Score (out of 10)
 - 9–10: Elite answer; confident, structured, quantifiable.
 - 7–8: Solid but could use clearer impact or tighter phrasing.
 - 5–6: Adequate structure, but weak delivery or result.
@@ -116,7 +117,7 @@ Break the answer into Situation, Task, Action, Result.
 
 End like: Score: 7.5/10 – Strong action but impact unclear.
 
-## Step 3: Resume-Based Enhancement
+3: Resume-Based Enhancement
 Cross-reference with CV. Suggest better framing or context from resume items.
 
 Question: {q}  
