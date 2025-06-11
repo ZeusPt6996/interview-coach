@@ -38,7 +38,7 @@ if st.session_state.step == 1:
 
 # --- Step 2: Generate Questions ---
 elif st.session_state.step == 2:
-    st.header("❓ Step 2: Answer Tailored Mock Interview Questions")
+    st.header("❓ Step 2: Answer Specially Tailored Mock Interview Questions")
     with st.expander("💡 Need help with STAR format?"):
         st.markdown("""
         **S – Situation:** Set the scene  
