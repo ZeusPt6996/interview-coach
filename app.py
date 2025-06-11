@@ -155,11 +155,15 @@ Original Answer: {answer}
 
                 with st.container():
                     st.markdown("### 💬 Original Answer")
-                    st.markdown(answer)
+                    import textwrap
+wrapped_answer = textwrap.fill(answer, width=100)
+st.markdown(wrapped_answer)
 
                 with st.container():
                     st.markdown("### 📌 Feedback")
-                    st.markdown(feedback, unsafe_allow_html=True)
+                    import textwrap
+wrapped_feedback = textwrap.fill(feedback, width=100)
+st.markdown(wrapped_feedback, unsafe_allow_html=True)
 
                 with st.container():
                     st.markdown("### ✍️ Suggested Rewrite")
