@@ -128,7 +128,7 @@ Resume: {st.session_state['cv']}
 '''
 
         rewrite_prompt = f"""
-Rewrite this as a business-focused, result-oriented response. Do not label STAR sections. Just follow the STAR logic naturally and use a professional tone.
+Rewrite this answer in a business-focused tone. Do not include Situation, Task, Action, or Result labels. Ensure it's concise, engaging, and structured logically.
 
 Question: {q}
 Original Answer: {answer}
@@ -141,7 +141,10 @@ Original Answer: {answer}
                     messages=[{"role": "user", "content": feedback_prompt}]
                 )
                 feedback_raw = feedback_response.choices[0].message.content.strip() if len(answer.strip()) >= 5 else "⚠️ No valid answer provided. Please write a more complete response."
-feedback = feedback_raw.replace("##", "").replace("###", "").replace("**", "")"⚠️ No valid answer provided. Please write a more complete response."
+feedback = feedback_raw.replace("##", "").replace("###", "").replace("**", "").replace("
+", "
+
+")"⚠️ No valid answer provided. Please write a more complete response."
 
                 rewrite_response = openai.chat.completions.create(
                     model="gpt-4",
@@ -167,14 +170,17 @@ feedback = feedback_raw.replace("##", "").replace("###", "").replace("**", "")"�
     else:
         star_section = feedback
 
-    st.markdown("**Step 1: STAR Breakdown**")
-    st.markdown(star_section)
+    st.markdown("**1. STAR Breakdown**")
+    cleaned_star = re.sub(r"^.*?Situation:?", "", star_section, flags=re.IGNORECASE).strip()
+    st.markdown(cleaned_star)
     if score_section:
-        st.markdown("**Step 2: Final Score**")
-        st.markdown(score_section)
+        st.markdown("**2. Final Score**")
+    cleaned_score = re.sub(r"^.*?Score:?", "", score_section, flags=re.IGNORECASE).strip()
+    st.markdown(cleaned_score)
     if resume_section:
-        st.markdown("**Step 3: Resume-Based Enhancement**")
-        st.markdown(resume_section)
+        st.markdown("**3. Resume-Based Enhancement**")
+    cleaned_resume = re.sub(r"^.*?Resume-Based Enhancement:?", "", resume_section, flags=re.IGNORECASE).strip()
+    st.markdown(cleaned_resume)
 
                 with st.container():
                     st.markdown("### ✍️ Suggested Rewrite")
