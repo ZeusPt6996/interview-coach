@@ -105,13 +105,13 @@ elif st.session_state.step == 3:
         feedback_prompt = f'''
 You are a high-stakes mock interview coach for elite consulting, marketing, sales, and product roles. Evaluate critically using the STAR method with McKinsey-level scrutiny. Be rigorous.
 
-## Step 1: STAR Breakdown
+Step 1: STAR Breakdown
 Break the answer into Situation, Task, Action, Result. 
 - Identify weak verbs, filler content, and gaps in logic.
 - Penalize generic or unverifiable claims.
 - Praise tangible impact and confident storytelling.
 
-## Step 2: Final Score (out of 10)
+Step 2: Final Score (out of 10)
 - 9–10: Elite answer; confident, structured, quantifiable.
 - 7–8: Solid but could use clearer impact or tighter phrasing.
 - 5–6: Adequate structure, but weak delivery or result.
@@ -119,7 +119,7 @@ Break the answer into Situation, Task, Action, Result.
 
 End like: Score: 7.5/10 – Strong action but impact unclear.
 
-## Step 3: Resume-Based Enhancement
+Step 3: Resume-Based Enhancement
 Cross-reference with CV. Suggest better framing or context from resume items.
 
 Question: {q}  
@@ -143,13 +143,13 @@ Original Answer: {answer}
                     model="gpt-4",
                     messages=[{"role": "user", "content": feedback_prompt}]
                 )
-                feedback = feedback_response.choices[0].message.content.strip()
+                feedback = feedback_response.choices[0].message.content.strip() if len(answer.strip()) >= 5 else "⚠️ No valid answer provided. Please write a more complete response."
 
                 rewrite_response = openai.chat.completions.create(
                     model="gpt-4",
                     messages=[{"role": "user", "content": rewrite_prompt}]
                 )
-                rewrite = rewrite_response.choices[0].message.content.strip()
+                rewrite = rewrite_response.choices[0].message.content.strip() if len(answer.strip()) >= 5 else "✍️ Cannot rewrite — original answer was too short."
 
             with st.expander(f"📝 Feedback for Q{i+1}"):
                 st.markdown(f"**🔹 Question:** {q}")
@@ -160,9 +160,23 @@ Original Answer: {answer}
                     st.markdown(wrapped_answer)
 
                 with st.container():
-                    st.markdown("### 📌 Feedback")
-                    wrapped_feedback = textwrap.fill(feedback, width=100)
-                    st.markdown(wrapped_feedback, unsafe_allow_html=True)
+    st.markdown("### 📌 Feedback")
+    star_section, score_section, resume_section = "", "", ""
+    if "Step 2:" in feedback and "Step 3:" in feedback:
+        star_section = feedback.split("Step 2:")[0].strip()
+        score_section = feedback.split("Step 2:")[1].split("Step 3:")[0].strip()
+        resume_section = feedback.split("Step 3:")[1].strip()
+    else:
+        star_section = feedback
+
+    st.markdown("**Step 1: STAR Breakdown**")
+    st.markdown(star_section)
+    if score_section:
+        st.markdown("**Step 2: Final Score**")
+        st.markdown(score_section)
+    if resume_section:
+        st.markdown("**Step 3: Resume-Based Enhancement**")
+        st.markdown(resume_section)
 
                 with st.container():
                     st.markdown("### ✍️ Suggested Rewrite")
