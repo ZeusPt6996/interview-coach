@@ -5,6 +5,7 @@ import fitz  # PyMuPDF for PDF text extraction
 import re
 from docx import Document
 from io import BytesIO
+import textwrap
 
 st.title("🎯 InterviewCoach Pro")
 st.markdown("Your AI Mock Interviewer for High-Performance Roles")
@@ -154,16 +155,14 @@ Original Answer: {answer}
                 st.markdown(f"**🔹 Question:** {q}")
 
                 with st.container():
-    import textwrap
-    st.markdown("### 💬 Original Answer")
-    wrapped_answer = textwrap.fill(answer, width=100)
-    st.markdown(wrapped_answer)
+                    st.markdown("### 💬 Original Answer")
+                    wrapped_answer = textwrap.fill(answer, width=100)
+                    st.markdown(wrapped_answer)
 
                 with st.container():
                     st.markdown("### 📌 Feedback")
-                    import textwrap
-wrapped_feedback = textwrap.fill(feedback, width=100)
-st.markdown(wrapped_feedback, unsafe_allow_html=True)
+                    wrapped_feedback = textwrap.fill(feedback, width=100)
+                    st.markdown(wrapped_feedback, unsafe_allow_html=True)
 
                 with st.container():
                     st.markdown("### ✍️ Suggested Rewrite")
